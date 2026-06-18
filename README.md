@@ -1,28 +1,37 @@
 # Skills
 
-My personal collection of AI agent skills for engineering workflows.
+个人 AI agent skills 集合，用于工程工作流。参考 [mattpocock/skills](https://github.com/mattpocock/skills) 建立。
 
-## Structure
+## 目录结构
 
 ```
 skills/
-├── engineering/    — Code-specific workflow skills (debug, TDD, architecture)
-├── productivity/   — General workflow tools (planning, handoff, writing)
-├── fork/           — Forked from mattpocock/skills (see below)
-├── misc/           — Rarely used but useful tools
-├── personal/       — Personal-use skills
-├── deprecated/     — Retired skills
-└── in-progress/    — Work-in-progress skills
+├── engineering/    — 代码工作流（调试、TDD、架构、PR）
+├── productivity/   — 通用工具（阅读、规划、交接、写作）
+├── fork/           — 来自 mattpocock/skills
+├── misc/           — 杂项
+├── personal/       — 个人定制
+├── deprecated/     — 已废弃
+└── in-progress/    — 开发中
 ```
 
-## Skill Format
+## 所有 Skills
 
-Each skill lives in its own directory with a `SKILL.md` file:
+| 分类 | Skill | 说明 |
+|------|-------|------|
+| engineering | **triage-review** | PR Review Triage：分类处理人工 reviewer 的未解决评论，自动修复代码、回复评论、反馈 harness docs gap |
+| productivity | **read-with-me** | 读书陪伴：融合 Adler 四层阅读法、Zettelkasten 卡片笔记法、循证学习法，配合微信读书数据，支持多会话深读、笔记沉淀和间隔复习 |
+| fork | **grill-me** | 对计划或设计持续追问，逐个解决决策树的每个分支直到达成共识，适合动手写代码前压力测试方案 |
+| fork | **teach** | 多会话渐进式教学，在工作区建立学习空间：MISSION 锚定目标、RESOURCES 积累资料、HTML 课程卡片逐步教授、learning records 追踪进度 |
+
+## Skill 格式
+
+每个 skill 是一个独立目录，包含 `SKILL.md` 主文件：
 
 ```
-skills/<category>/<skill-name>/
-├── SKILL.md           — Main skill file (frontmatter + instructions)
-└── (optional files)   — Reference docs, templates, examples
+skills/<分类>/<skill名>/
+├── SKILL.md           — 主文件（frontmatter + 指令）
+└── (可选文件)          — 参考文档、模板、示例
 ```
 
 ### SKILL.md Frontmatter
@@ -30,35 +39,22 @@ skills/<category>/<skill-name>/
 ```yaml
 ---
 name: skill-name
-description: What it does and when to trigger it.
-argument-hint: "optional: suggested argument format"
-disable-model-invocation: true  # optional: prevents Claude from auto-calling
+description: 做什么、何时触发。
+argument-hint: "可选：建议的参数格式"
+disable-model-invocation: true  # 可选：禁止 Claude 自动调用
 ---
 ```
 
-## Usage
+## 使用
 
-Link skills into your project:
+将 skills 链接到项目：
 
 ```bash
 ./scripts/link-skills.sh
 ```
 
-List available skills:
+列出所有 skills：
 
 ```bash
 ./scripts/list-skills.sh
 ```
-
-## Fork
-
-`skills/fork/` contains skills adopted from [mattpocock/skills](https://github.com/mattpocock/skills), kept as reference and starting point for customization.
-
-| Skill | Description |
-|-------|-------------|
-| **grill-me** | 对计划或设计持续追问，逐个解决决策树的每个分支，直到达成共识。每个问题会附带推荐答案，能通过代码探索回答的会直接去查代码。适合在动手写代码前压力测试你的方案。 |
-| **teach** | 多会话渐进式教学。在工作区内建立学习空间：用 MISSION.md 锚定学习目标，用 RESOURCES.md 积累高质量参考资料，通过 HTML 课程卡片逐步教授，用 learning records 追踪掌握进度。 |
-
-## Inspiration
-
-Inspired by [mattpocock/skills](https://github.com/mattpocock/skills).
