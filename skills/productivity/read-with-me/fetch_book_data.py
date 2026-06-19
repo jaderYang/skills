@@ -9,16 +9,64 @@ import sys
 import urllib.request
 import urllib.error
 from datetime import datetime
+from pathlib import Path
 
 API_BASE = "https://i.weread.qq.com/api/agent/gateway"
 SKILL_VERSION = "1.0.3"
 
 
 def get_api_key():
-    settings_path = os.path.expanduser("~/.claude/settings.json")
-    with open(settings_path, "r") as f:
-        settings = json.load(f)
-    return settings.get("env", {}).get("WEREAD_API_KEY")
+    """按优先级链查找 WEREAD_API_KEY，支持多工具、多平台。"""
+    # 1. 环境变量（最高优先级，通用契约）
+    key = os.environ.get("WEREAD_API_KEY")
+    if key:
+        return key
+
+    # 2. 工具无关共享位置
+    shared = _shared_key_path()
+    key = _read_plain_key(shared)
+    if key:
+        return key
+
+    # 3. 各 AI 工具配置目录（JSON 格式，统一读 env.WEREAD_API_KEY）
+    home = Path.home()
+    for cfg in [
+        home / ".claude" / "settings.json",
+        home / ".workbuddy" / "settings.json",
+    ]:
+        key = _read_json_env_key(cfg)
+        if key:
+            return key
+
+    return None
+
+
+def _shared_key_path():
+    """工具无关的共享配置路径：Unix ~/.config/weread/key，Windows %APPDATA%\\weread\\key"""
+    if sys.platform == "win32":
+        base = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+    else:
+        base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    return base / "weread" / "key"
+
+
+def _read_plain_key(path):
+    """从纯文本文件读取 key。"""
+    try:
+        text = Path(path).read_text(encoding="utf-8").strip()
+        return text if text else None
+    except (OSError, IOError):
+        return None
+
+
+def _read_json_env_key(path):
+    """从 JSON 配置文件的 env.WEREAD_API_KEY 读取。"""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("env", {}).get("WEREAD_API_KEY") or None
+    except (OSError, IOError, json.JSONDecodeError, KeyError):
+        return None
 
 
 def call_weread(api_key, api_name, book_id):
@@ -54,8 +102,17 @@ def format_timestamp(ts):
 
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "用法: python3 fetch_book_data.py <bookId>"}))
+        print(json.dumps({"error": "用法: python3 fetch_book_data.py <bookId> | --check"}))
         sys.exit(1)
+
+    # --check: 只检查 key 是否已配置，不调 API
+    if sys.argv[1] == "--check":
+        api_key = get_api_key()
+        if api_key:
+            print(json.dumps({"configured": True}))
+        else:
+            print(json.dumps({"configured": False}))
+        sys.exit(0)
 
     book_id = sys.argv[1]
     api_key = get_api_key()

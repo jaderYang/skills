@@ -145,8 +145,8 @@ The user has asked you to read with them. This is a stateful request — they in
 
 ### 鉴权
 
-- Header `Authorization: Bearer $WEREAD_API_KEY`,key 从 `~/.claude/settings.json` 的 `env.WEREAD_API_KEY` 读取(执行时 `export` 到当前 shell)。
-- **若 key 未配置或不可读**,引导用户配置,**不要打印 key 值**,只打印"已配置 / 未配置"。
+- Header `Authorization: Bearer $WEREAD_API_KEY`，key 按优先级自动查找：环境变量 `$WEREAD_API_KEY` → `~/.config/weread/key`（共享位置，Windows 为 `%APPDATA%\weread\key`） → `~/.claude/settings.json` → `~/.workbuddy/settings.json`。
+- **若 key 未配置或不可读**,打开引导页帮用户配置：`open ~/.claude/skills/weread-skills/setup-guide.html`。**不要打印 key 值**,只打印"已配置 / 未配置"。
 
 ### 半自动取数规则
 
@@ -160,7 +160,7 @@ python3 "<SKILL_DIR>/fetch_book_data.py" <bookId>
 ```
 
 脚本会自动完成以下操作：
-1. 从 `~/.claude/settings.json` 读取 `env.WEREAD_API_KEY`
+1. 按优先级链自动查找 `WEREAD_API_KEY`（环境变量 → `~/.config/weread/key` 共享文件 → AI 工具配置目录）
 2. 调用 4 个 weread 接口（getprogress / bookmarklist / bestbookmarks / info）
 3. 输出统一 JSON，包含：title、author、progress、currentChapterUid、userHighlights（含 chapterUid/markText/range/createTime）、popularHighlights、popularTotal、chapterMap
 
@@ -199,13 +199,14 @@ python3 "<SKILL_DIR>/fetch_book_data.py" <bookId>
 ### 第一次进空书房(~/reading/ 不存在或为空)
 
 1. 创建 `~/reading/` 目录结构。
-2. 问用户 3-5 个问题,据此初始化 `PROFILE.md`:
+2. **检查 weread API key**：运行 `python3 "<SKILL_DIR>/fetch_book_data.py" --check`，若返回 `configured: false`，打开引导页 `open ~/.claude/skills/weread-skills/setup-guide.html`，等用户配好再继续。
+3. 问用户 3-5 个问题,据此初始化 `PROFILE.md`:
    - 你读书的口味(虚构 vs 非虚构,哪些领域)
    - 读书的目标/动机
    - 每周大概有多少阅读时间
    - 希望陪读强度(温和 vs grill)
-3. 调 `/shelf/sync` 把用户书架同步进 `READING-LOG.md` 的"在读"段(最多 20 本最近更新的)。
-4. 创建初始 `RESOURCES.md`,预填 Adler/Ahrens/循证学习三条已查证源。
+4. 调 `/shelf/sync` 把用户书架同步进 `READING-LOG.md` 的"在读"段(最多 20 本最近更新的)。
+5. 创建初始 `RESOURCES.md`,预填 Adler/Ahrens/循证学习三条已查证源。
 
 ### 首次陪读某本书(books/<书名>/ 不存在)
 
