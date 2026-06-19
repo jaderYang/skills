@@ -7,20 +7,30 @@ The user has asked you to read with them. This is a stateful request — they in
 
 ## 书房工作区
 
-用户的"书房"是一个独立目录（跨平台，macOS/Linux/Windows 均可）。
+用户的"书房"是一个独立目录（跨平台，macOS/Linux/Windows 均可）。路径由用户首次设置后持久保存，后续直接使用。
 
-### 初始化检查
+### 路径持久化
 
-每次启动陪读时，先检查书房目录是否存在：
+书房路径保存在 `<SKILL_DIR>/config.json`（与本 SKILL.md 同目录）：
 
-- **目录已存在**：跳过创建，直接进入陪读流程。
-- **目录不存在**：**用 AskUserQuestion 询问用户**：
-  - 提供默认路径 `~/reading/`，同时让用户可以自定义路径
-  - 用户确认后，用 `mkdir -p` 创建（自动含父目录），然后走 onboarding 流程初始化内部文件
+```json
+{ "readingDir": "/Users/jader/reading" }
+```
+
+### 初始化流程
+
+每次启动陪读时：
+
+1. **读取 config.json**：若文件存在且有 `readingDir` 字段，直接使用该路径，跳过询问。
+2. **config.json 不存在或无 `readingDir`**：**用 AskUserQuestion 交互式询问用户**：
+   - 提供默认建议 `~/reading/`，用户可自定义任意路径
+   - 用户确认后，将路径写入 `config.json` 持久化
+   - 用 `mkdir -p` 创建目录（自动含父目录）
+   - 走 onboarding 流程初始化内部文件
 
 > 注意：Write 工具不接受 `~`，写入文件时须先用 `echo ~/reading` 展开为绝对路径。
 
-当前目录若是其他工作区（例如 study-ts、业务 repo），**应引导用户进入书房目录后再启动陪读**。
+当前目录若不是书房目录，**应引导用户进入书房目录后再启动陪读**。
 
 工作区结构：
 
