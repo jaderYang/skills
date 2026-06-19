@@ -7,22 +7,20 @@ The user has asked you to read with them. This is a stateful request — they in
 
 ## 书房工作区
 
-用户的"书房"是一个独立目录，默认 `~/reading/`（跨平台，macOS/Linux/Windows 均可）。
+用户的"书房"是一个独立目录（跨平台，macOS/Linux/Windows 均可）。
 
 ### 初始化检查
 
-每次启动陪读时，先检查书房是否存在：
-
-```bash
-mkdir -p ~/reading
-```
+每次启动陪读时，先检查书房目录是否存在：
 
 - **目录已存在**：跳过创建，直接进入陪读流程。
-- **目录不存在**：`mkdir -p` 会自动创建（含父目录），然后走 onboarding 流程初始化内部文件。
+- **目录不存在**：**用 AskUserQuestion 询问用户**：
+  - 提供默认路径 `~/reading/`，同时让用户可以自定义路径
+  - 用户确认后，用 `mkdir -p` 创建（自动含父目录），然后走 onboarding 流程初始化内部文件
 
 > 注意：Write 工具不接受 `~`，写入文件时须先用 `echo ~/reading` 展开为绝对路径。
 
-当前目录若是其他工作区（例如 study-ts、业务 repo），**应引导用户进入 `~/reading/` 后再启动陪读**。
+当前目录若是其他工作区（例如 study-ts、业务 repo），**应引导用户进入书房目录后再启动陪读**。
 
 工作区结构：
 
