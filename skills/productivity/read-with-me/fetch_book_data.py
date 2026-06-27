@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """微信读书取数脚本 - read-with-me skill 专用
 用法: python3 fetch_book_data.py <bookId>
-输出: JSON 格式，包含 progress、bookmarks、bestbookmarks、bookinfo
+输出: JSON 格式，包含 progress、bookmarks、bestbookmarks、bookinfo、reviews（个人评论/想法）
 """
 import json
 import os
@@ -69,12 +69,15 @@ def _read_json_env_key(path):
         return None
 
 
-def call_weread(api_key, api_name, book_id):
-    payload = json.dumps({
+def call_weread(api_key, api_name, book_id, extra_params=None):
+    body = {
         "api_name": api_name,
         "bookId": book_id,
         "skill_version": SKILL_VERSION,
-    }).encode("utf-8")
+    }
+    if extra_params:
+        body.update(extra_params)
+    payload = json.dumps(body).encode("utf-8")
 
     req = urllib.request.Request(
         API_BASE,
@@ -124,6 +127,11 @@ def main():
     bookmarks_data = call_weread(api_key, "/book/bookmarklist", book_id)
     best_data = call_weread(api_key, "/book/bestbookmarks", book_id)
     info_data = call_weread(api_key, "/book/info", book_id)
+    # 个人评论/想法（深思考，比划线更重要）
+    reviews_data = call_weread(
+        api_key, "/review/list/mine", book_id,
+        extra_params={"bookid": book_id, "count": 100}
+    )
 
     progress = progress_data.get("book", {}).get("progress", None)
     chapter_uid = progress_data.get("book", {}).get("chapterUid", None)
@@ -147,6 +155,21 @@ def main():
             "range": item.get("range", ""),
         })
 
+    # 解析个人评论/想法（深思考）
+    reviews = []
+    for item in reviews_data.get("reviews", []):
+        review = item.get("review", {})
+        reviews.append({
+            "reviewId": review.get("reviewId", ""),
+            "chapterUid": review.get("chapterUid"),
+            "chapterName": review.get("chapterName", ""),
+            "content": review.get("content", ""),  # 用户的想法/评论
+            "abstract": review.get("abstract", ""),  # 对应的划线原文
+            "createTime": format_timestamp(review.get("createTime", 0)),
+            "star": review.get("star", 0),  # 评分（如有）
+        })
+    reviews.sort(key=lambda x: x["createTime"], reverse=True)
+
     chapters = {}
     for ch in bookmarks_data.get("chapters", []):
         chapters[str(ch.get("chapterUid"))] = ch.get("title", "")
@@ -159,6 +182,8 @@ def main():
         "author": info_data.get("author", ""),
         "progress": progress,
         "currentChapterUid": chapter_uid,
+        "userReviews": reviews,  # 个人评论/想法（深思考，优先级高于划线）
+        "userReviewCount": len(reviews),
         "userHighlights": highlights,
         "userHighlightCount": len(highlights),
         "popularHighlights": popular,
