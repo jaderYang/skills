@@ -1,6 +1,6 @@
 ---
 name: triage-review
-description: PR Review Triage：分类处理人工 reviewer 的未解决评论，修复代码、回复评论、反馈 harness docs gap。触发词：/triage-review、处理评论、pr comments。
+description: PR Review Triage：分类处理 PR reviewer 的未解决评论（FIX/REPLY/DISCUSS），修复代码、回复评论、反馈 harness docs gap。触发词：/triage-review、triage-review、处理评论、pr comments。
 model: opus
 ---
 
@@ -92,7 +92,9 @@ gh api repos/{owner}/{repo}/pulls/{PR}/reviews --paginate \
 
 **有 comment ID**（GitHub API 模式）：
 ```bash
-gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies -f body="..."
+# ⚠️ 路径里的 {PR} 不能省 —— 少了它（repos/{owner}/{repo}/pulls/comments/...）**一律 404**，
+#    实测 7 条回复全 404（2026-09-24）。这是本 skill 唯一踩过的脚本坑。
+gh api repos/{owner}/{repo}/pulls/{PR}/comments/{comment_id}/replies -f body="..."
 ```
 
 **无 comment ID**（文本输入模式）：
@@ -116,6 +118,10 @@ EOF
 **混合模式**：有 ID 的逐条回复，无 ID 的合并为一条 PR comment。
 
 完成后输出汇总。**不自动 push**。
+
+Phase 9 完成后还须：
+- **输出落实状态表**：每条评论 → 处理结果（已修复/已回复/待用户决策）+ 是否已 commit+push 到 PR（markdown 表格）
+- **主动确认同步状态**：修复类改动明确说「已 commit+push」或「仅本地未 push（待用户确认）」，不要等用户追问「改动同步到 PR 上了吗」
 
 ## 硬性约束
 
